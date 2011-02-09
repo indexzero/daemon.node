@@ -194,6 +194,6 @@ extern "C" void init(Handle<Object> target) {
   NODE_SET_METHOD(target, "setreuid", SetReuid);
   NODE_SET_METHOD(target, "closeStderr", CloseStderr);
   NODE_SET_METHOD(target, "closeStdout", CloseStdout);
-  NODE_SET_METHOD(target, "cloudStdin", CloseStdin);
+  NODE_SET_METHOD(target, "closeStdin", CloseStdin);
   NODE_SET_METHOD(target, "closeStdio", CloseStdio);
 }
