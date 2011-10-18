@@ -35,7 +35,7 @@ static Handle<Value> Start(const Arguments& args) {
   HandleScope scope;
 
   pid_t sid, pid = fork();
-  int i, new_fd;
+  int i, new_fd = -1, new_fd_stderr, length;
 
   if (pid < 0)      exit(1);
   else if (pid > 0) exit(0);
@@ -53,15 +53,28 @@ static Handle<Value> Start(const Arguments& args) {
     // Close stdin
     freopen("/dev/null", "r", stdin);
     
-    if (args.Length() > 0 && args[0]->IsInt32()) {
+    length = args.Length();
+    if (length > 0 && args[0]->IsInt32()) {
       new_fd = args[0]->Int32Value();
       dup2(new_fd, STDOUT_FILENO);
-      dup2(new_fd, STDERR_FILENO);
+    }
+    else {
+      freopen("/dev/null", "w", stdout);
+    }
+
+    if (length > 1 && args[1]->IsInt32()) {
+      new_fd_stderr = args[1]->Int32Value();
+    }
+    else {
+      new_fd_stderr = new_fd;
+    }
+
+    if (new_fd_stderr != -1) {
+      dup2(new_fd_stderr, STDERR_FILENO);
     }
     else {
       freopen("/dev/null", "w", stderr);
-      freopen("/dev/null", "w", stdout);
-    } 
+    }
   }
 
   return scope.Close(Number::New(getpid()));

@@ -45,7 +45,7 @@ This library also exposes a higher level facility through javascript for startin
   
   // Your awesome code here
   
-  daemon.daemonize('somefile.log', '/tmp/yourprogram.pid', function (err, pid) {
+  daemon.daemonize({ stdout: 'somefile.log', stderr: 'error.log' }, '/tmp/yourprogram.pid', function (err, pid) {
     // We are now in the daemon process
     if (err) return util.puts('Error starting daemon: ' + err);
     
@@ -55,8 +55,8 @@ This library also exposes a higher level facility through javascript for startin
 
 ### Methods
 
-#### daemon.start([fd for stdout and stderr])
-  If you supply a file descriptor it will redirect stdout and stderr to it, else stdout and stderr will be sent to /dev/null.
+#### daemon.start([ fd for stdout and stderr | { stdout: fd, stderr: fd } ])
+  Either a file descriptor that stdout and stderr should be redirected to or an object containing separate file descriptors for 'stdout' and/or 'stderr'. Otherwise output will be sent to /dev/null.
 #### daemon.closeStdin()
   Closes stdin and reopens fd as /dev/null.
 #### daemon.closeStdout()
