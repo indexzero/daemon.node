@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+version=`node -v`
+node-waf configure build
+if [ -f build/Release/daemon.node ]; then
+  cp build/Release/daemon.node "lib/daemon.$version.node"
+elif [ -f build/default/daemon.node ]; then
+  cp build/default/daemon.node "lib/daemon.$version.node"
+fi

@@ -19,7 +19,7 @@
   },
   "main": "./lib/daemon",
   "scripts" : {
-    "preinstall" : "node-waf configure build"
+    "preinstall" : "bash ./install"
   },
   "engines" : {
      "node" : ">= 0.4.0"
