@@ -7,3 +7,8 @@ node_modules
 npm-debug.log
 fixtures/*
 fixtures/!.gitkeep
+Makefile.gyp
+*.Makefile
+*.target.gyp.mk
+gyp-mac-tool
+out/
