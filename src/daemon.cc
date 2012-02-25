@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <pwd.h>
@@ -33,22 +34,22 @@ using namespace node;
 //
 static Handle<Value> Start(const Arguments& args) {
   HandleScope scope;
-
-  pid_t sid, pid = fork();
+  pid_t sid, pid;
   int new_fd = -1, new_fd_stderr, length;
 
-  if (pid < 0)      exit(1);
+  pid = fork();
+  if (pid < 0) {
+    return ThrowException(ErrnoException(errno, "fork()"));
+  }
   else if (pid > 0) exit(0);
 
   if (pid == 0) {
-    // Child process: We need to tell libev that we are forking because
-    // kqueue can't deal with this gracefully.
-    //
-    // See: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#code_ev_fork_code_the_audacity_to_re
-    ev_default_fork();
-    
+    // Child process:
+
     sid = setsid();
-    if(sid < 0) exit(1);
+    if(sid < 0) {
+      return ThrowException(ErrnoException(errno, "setsid()"));
+    }
 
     // Close stdin
     freopen("/dev/null", "r", stdin);
@@ -56,12 +57,17 @@ static Handle<Value> Start(const Arguments& args) {
     length = args.Length();
     
     //
-    // Attempt to set STDOUT_FIlENO if we have been
+    // Attempt to set STDOUT_FILENO if we have been
     // passed an argument for it, otherwise point
     // to /dev/null
     //
-    if (length > 0 && args[0]->IsInt32()) {
-      new_fd = args[0]->Int32Value();
+    if (length > 0 && args[0]->IsString()) {
+      String::Utf8Value outfile(args[0]->ToString());
+      new_fd = open(*outfile, O_WRONLY | O_APPEND | O_CREAT,
+                S_IWUSR | S_IWGRP | S_IRUSR | S_IRGRP);
+      if (new_fd < 0) {
+        return ThrowException(ErrnoException(errno, "open()"));
+      }
       dup2(new_fd, STDOUT_FILENO);
     }
     else {
@@ -72,8 +78,13 @@ static Handle<Value> Start(const Arguments& args) {
     // Get the STDERR fd if it has been passed
     // as an argument
     //
-    if (length > 1 && args[1]->IsInt32()) {
-      new_fd_stderr = args[1]->Int32Value();
+    if (length > 1 && args[1]->IsString()) {
+      String::Utf8Value errfile(args[1]->ToString());
+      new_fd_stderr = open(*errfile, O_WRONLY | O_APPEND | O_CREAT,
+                            S_IWUSR | S_IWGRP | S_IRUSR | S_IRGRP);
+      if (new_fd_stderr < 0) {
+        return ThrowException(ErrnoException(errno, "open()"));
+      }
     }
     else {
       new_fd_stderr = new_fd;
@@ -92,7 +103,7 @@ static Handle<Value> Start(const Arguments& args) {
     }
   }
 
-  return scope.Close(Number::New(getpid()));
+  return scope.Close(Integer::New(getpid()));
 }
 
 //
@@ -148,12 +159,6 @@ Handle<Value> LockD(const Arguments& args) {
   fsync(lfp);
   
   return Boolean::New(true);
-}
-
-Handle<Value> SetSid(const Arguments& args) {
-  pid_t sid;
-  sid = setsid();
-  return Integer::New(sid);
 }
 
 const char* ToCString(const v8::String::Utf8Value& value) {
@@ -226,7 +231,6 @@ extern "C" void init(Handle<Object> target) {
   
   NODE_SET_METHOD(target, "start", Start);
   NODE_SET_METHOD(target, "lock", LockD);
-  NODE_SET_METHOD(target, "setsid", SetSid);
   NODE_SET_METHOD(target, "chroot", Chroot);
   NODE_SET_METHOD(target, "setreuid", SetReuid);
   NODE_SET_METHOD(target, "closeStderr", CloseStderr);
