@@ -21,9 +21,6 @@
     "vows": "0.5.x"
   },
   "main": "./lib/daemon",
-  "scripts" : {
-    "preinstall" : "bash ./install"
-  },
   "engines" : {
      "node" : ">= 0.4.0"
   }
