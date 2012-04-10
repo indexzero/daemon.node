@@ -54,9 +54,9 @@ static Handle<Value> Start(const Arguments& args) {
 
     // Close stdin
     freopen("/dev/null", "r", stdin);
-    
+
     length = args.Length();
-    
+
     //
     // Attempt to set STDOUT_FILENO if we have been
     // passed an argument for it, otherwise point
@@ -141,24 +141,24 @@ Handle<Value> CloseStdio(const Arguments& args) {
 // File-lock to make sure that only one instance of daemon is running, also for storing pid
 //   lock (filename)
 //   @filename: a path to a lock-file.
-// 
+//
 //   Note: if filename doesn't exist, it will be created when function is called.
 //
 Handle<Value> LockD(const Arguments& args) {
   if (!args[0]->IsString())
     return Boolean::New(false);
-  
+
   String::Utf8Value data(args[0]->ToString());
   char pid_str[PID_MAXLEN+1];
-  
+
   int lfp = open(*data, O_RDWR | O_CREAT | O_TRUNC, 0640);
   if(lfp < 0) exit(1);
   if(lockf(lfp, F_TLOCK, 0) < 0) return Boolean::New(false);
-  
+
   int len = snprintf(pid_str, PID_MAXLEN, "%d", getpid());
   write(lfp, pid_str, len);
   fsync(lfp);
-  
+
   return Boolean::New(true);
 }
 
@@ -192,7 +192,7 @@ Handle<Value> Chroot(const Arguments& args) {
 }
 
 //
-// Allow changing the real and effective user ID of this process 
+// Allow changing the real and effective user ID of this process
 // so a root process can become unprivileged
 //
 Handle<Value> SetReuid(const Arguments& args) {
@@ -208,8 +208,11 @@ Handle<Value> SetReuid(const Arguments& args) {
 
     if (pwd_entry) {
       setreuid(pwd_entry->pw_uid, pwd_entry->pw_uid);
+      if (setreuid(pwd_entry->pw_uid, pwd_entry->pw_uid) < 0) {
+        return ThrowException(ErrnoException(errno, "setreuid"));
+      }
       return Boolean::New(true);
-    } 
+    }
     else {
       return ThrowException(Exception::Error(
         String::New("User not found")
@@ -219,13 +222,15 @@ Handle<Value> SetReuid(const Arguments& args) {
   else if (args[0]->IsInt32()) {
     uid_t uid;
     uid = args[0]->Int32Value();
-    setreuid(uid, uid);
+    if (setreuid(uid, uid) < 0) {
+      return ThrowException(ErrnoException(errno, "setreuid"));
+    }
     return Boolean::New(true);
   }
 }
 
 //
-// Allow changing the real and effective group ID of this process 
+// Allow changing the real and effective group ID of this process
 // so a root process can become unprivileged
 //
 Handle<Value> SetRegid(const Arguments& args) {
@@ -240,9 +245,11 @@ Handle<Value> SetRegid(const Arguments& args) {
     struct group* grp_entry = getgrnam(*groupname);
 
     if (grp_entry) {
-      setregid(grp_entry->gr_gid, grp_entry->gr_gid);
+      if (setregid(grp_entry->gr_gid, grp_entry->gr_gid) < 0) {
+        return ThrowException(ErrnoException(errno, "setregid"));
+      }
       return Boolean::New(true);
-    } 
+    }
     else {
       return ThrowException(Exception::Error(
             String::New("Group not found")
@@ -252,7 +259,9 @@ Handle<Value> SetRegid(const Arguments& args) {
   else if (args[0]->IsInt32()) {
     gid_t gid;
     gid = args[0]->Int32Value();
-    setregid(gid, gid);
+    if (setregid(gid, gid) < 0) {
+      return ThrowException(ErrnoException(errno, "setregid"));
+    }
     return Boolean::New(true);
   }
 }
@@ -262,7 +271,7 @@ Handle<Value> SetRegid(const Arguments& args) {
 //
 extern "C" void init(Handle<Object> target) {
   HandleScope scope;
-  
+
   NODE_SET_METHOD(target, "start", Start);
   NODE_SET_METHOD(target, "lock", LockD);
   NODE_SET_METHOD(target, "chroot", Chroot);
