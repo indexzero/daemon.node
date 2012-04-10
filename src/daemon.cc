@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <pwd.h>
+#include <grp.h>
 
 #define PID_MAXLEN 10
 
@@ -224,6 +225,39 @@ Handle<Value> SetReuid(const Arguments& args) {
 }
 
 //
+// Allow changing the real and effective group ID of this process 
+// so a root process can become unprivileged
+//
+Handle<Value> SetRegid(const Arguments& args) {
+  if (args.Length() == 0 || (!args[0]->IsString() && !args[0]->IsInt32()))
+    return ThrowException(Exception::Error(
+          String::New("Must give a gid or groupname to become")
+          ));
+
+  if (args[0]->IsString()) {
+    String::AsciiValue groupname(args[0]);
+
+    struct group* grp_entry = getgrnam(*groupname);
+
+    if (grp_entry) {
+      setregid(grp_entry->gr_gid, grp_entry->gr_gid);
+      return Boolean::New(true);
+    } 
+    else {
+      return ThrowException(Exception::Error(
+            String::New("Group not found")
+            ));
+    }
+  }
+  else if (args[0]->IsInt32()) {
+    gid_t gid;
+    gid = args[0]->Int32Value();
+    setregid(gid, gid);
+    return Boolean::New(true);
+  }
+}
+
+//
 // Initialize this add-on
 //
 extern "C" void init(Handle<Object> target) {
@@ -233,6 +267,7 @@ extern "C" void init(Handle<Object> target) {
   NODE_SET_METHOD(target, "lock", LockD);
   NODE_SET_METHOD(target, "chroot", Chroot);
   NODE_SET_METHOD(target, "setreuid", SetReuid);
+  NODE_SET_METHOD(target, "setregid", SetRegid);
   NODE_SET_METHOD(target, "closeStderr", CloseStderr);
   NODE_SET_METHOD(target, "closeStdout", CloseStdout);
   NODE_SET_METHOD(target, "closeStdin", CloseStdin);

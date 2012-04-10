@@ -99,6 +99,8 @@ If you wish you can also simply pass a single pass which you wish to be used for
   Attempts to chroot the process, returns exception on error, returns true on success.
 #### daemon.setreuid(1000)
   Change the effective user of the process. Can take either an integer (UID) or a string (Username). Returns exceptions on error and true on success.
+#### daemon.setregid(1000)
+  Change the effective group of the process. Can take either an integer (GID) or a string (Groupname). Returns exceptions on error and true on success.
 
 
 ### The Fine Print
