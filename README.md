@@ -93,8 +93,6 @@ If you wish you can also simply pass a single pass which you wish to be used for
   Closes std[in|out|err] and reopens fd as /dev/null.
 #### daemon.lock('/file_to_lock')
   Try to lock the file. If it's unable to OPEN the file it will exit. If it's unable to get a LOCK on the file it will return false. Else it will return true.
-#### daemon.setsid()
-  Starts a new session for the process. Returns the SID as an integer.
 #### daemon.chroot('/path_to_chroot_to')
   Attempts to chroot the process, returns exception on error, returns true on success.
 #### daemon.setreuid(1000)
