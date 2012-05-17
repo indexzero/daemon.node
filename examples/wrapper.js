@@ -49,10 +49,6 @@ switch(args[2]) {
       res.end();
     }).listen(8000);
     
-    var fds = config.errFile 
-      ? { stdout: config.outFile, stderr: config.errFile }
-      : config.outFile;
-    
     daemon.start(config.outFile, config.errFile);
     daemon.lock(config.lockFile);
     

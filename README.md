@@ -4,11 +4,6 @@ A C++ add-on for Node.js to enable simple daemons in Javascript plus some useful
 
 ## Installation
 
-### Installing npm (node package manager)
-```
-  curl http://npmjs.org/install.sh | sh
-```
-
 ### Installing daemon.node with npm
 ```
   [sudo] npm install daemon
@@ -19,70 +14,57 @@ A C++ add-on for Node.js to enable simple daemons in Javascript plus some useful
   node-waf configure build  
 ```
 
-## Usage 
+## Usage
 
-There is a great getting started article on daemons and node.js by Slashed that you [can read here][0]. The API has changed slightly from that version thanks to contributions from ptge and [fugue][1]; there is no longer a daemon.closeIO() method, this is done automatically for you.
+### Caveats Regarding Forking Safety
+
+As of v0.6, node.js has not been fork-safe. What this means for you is that **all daemonization should happen on the first tick and not as part of an asynchronous action**. The easiest way to ensure this is to daemonize your process very early in the script, near the "require" block.
+
+`daemon.kill`, however, is still asynchronous.
 
 ### Starting a daemon:
-Starting a daemon is easy, just call daemon.start() and daemon.lock(). 
+Starting a daemon is easy, just call daemon.start() and daemon.lock().
 
 ``` js
-  var daemon = require('daemon');
-  
-  // Your awesome code here
-  
-  fs.open('somefile.log', 'w+', function (err, fd) {
-    daemon.start(fd);
-    daemon.lock('/tmp/yourprogram.pid');
-  });
+var daemon = require('daemon'),
+    pid;
+
+pid = daemon.start('stdout.log', 'stderr.log');
+daemon.lock('/tmp/yourprogram.pid');
 ```
+
+`daemon.start` daemonizes your script's process and redirects stdio to the specified files. `daemon.lock` places a lockfile on your daemon.
 
 This library also exposes a higher level facility through javascript for starting daemons:
 
 ``` js
-  var daemon = require('daemon');
+  var daemon = require('daemon'),
+      pid;
   
-  //
-  // Your awesome code here
-  //
-  
-  daemon.daemonize({ stdout: 'somefile.log', stderr: 'error.log' }, '/tmp/yourprogram.pid', function (err, pid) {
-    //
-    // We are now in the daemon process
-    //
-    if (err) {
-      return console.log('Error starting daemon: ' + err);
-    }
-    
-    console.log('Daemon started successfully with pid: ' + pid);
-  });
+  pid = daemon.daemonize({ stdout: 'somefile.log', stderr: 'error.log' }, '/tmp/yourprogram.pid');
+  console.log('Daemon started successfully with pid: ' + pid);
 ```
 
 If you wish you can also simply pass a single pass which you wish to be used for both `stdout` and `stderr`:
 
 ``` js
-  var daemon = require('daemon');
+  var daemon = require('daemon'),
+      pid;
   
-  //
-  // Your awesome code here
-  //
-  
-  daemon.daemonize('stdout-and-stderr.log', '/tmp/yourprogram.pid', function (err, pid) {
-    //
-    // We are now in the daemon process
-    //
-    if (err) {
-      return console.log('Error starting daemon: ' + err);
-    }
-    
-    console.log('Daemon started successfully with pid: ' + pid);
-  });
+  pid = daemon.daemonize('stdout-and-stderr.log', '/tmp/yourprogram.pid');
+  console.log('Daemon started successfully with pid: ' + pid);
 ```
 
 ### Methods
 
 #### daemon.start(stdout[, stderr])
-  Takes two file descriptors, one for `stdout` and one for `stderr`. If only `stdout` is supplied, `stderr` will use the same fd. If no arguments are passed, `stdout` and `stderr` output will be sent to `/dev/null`.
+  Takes two filenames, one for `stdout` and one for `stderr`. If only `stdout` is supplied, `stderr` will use the same filename. If no arguments are passed, `stdout` and `stderr` output will be sent to `/dev/null`. Returns the process pid.
+#### daemon.lock('/tmp/lockfile.pid')
+  Try to lock the file. If it's unable to OPEN the file it will exit. If it's unable to get a LOCK on the file it will return false. Else it will return true.
+#### daemon.daemonize({ stdout: 'stdout.log', stderr: 'stderr.log' }, '/tmp/lockfile.pid', [cb])
+  A convenience wrapper around `daemon.start` and `daemon.lock`. Returns pid, optionally calls `cb(err, pid)` for error handling and backwards compatibility. *This method is still synchronous*.
+#### daemon.kill(lockfile, cb)
+  Kills the process specified in the lockfile and cleans the file. Unlike every other method in this library, this one is asynchronous.
 #### daemon.closeStdin()
   Closes stdin and reopens fd as /dev/null.
 #### daemon.closeStdout()
@@ -91,21 +73,17 @@ If you wish you can also simply pass a single pass which you wish to be used for
   Closes stderr and reopens fd as /dev/null.
 #### daemon.closeStdio()
   Closes std[in|out|err] and reopens fd as /dev/null.
-#### daemon.lock('/file_to_lock')
-  Try to lock the file. If it's unable to OPEN the file it will exit. If it's unable to get a LOCK on the file it will return false. Else it will return true.
-#### daemon.setsid()
-  Starts a new session for the process. Returns the SID as an integer.
 #### daemon.chroot('/path_to_chroot_to')
   Attempts to chroot the process, returns exception on error, returns true on success.
 #### daemon.setreuid(1000)
   Change the effective user of the process. Can take either an integer (UID) or a string (Username). Returns exceptions on error and true on success.
 
-
 ### The Fine Print
-This library is available under the MIT LICENSE. See the LICENSE file for more details. It was created by [Slashed][2] and [forked][3] / [improved][4] / [hacked upon][1] by a lot of good people. Special thanks to [Isaacs][5] for npm and a great example in [glob][6].
+
+This library is available under the MIT LICENSE. See the LICENSE file for more details. It was originally created by [Slashed][2] and has been forked/improved/hacked upon by a lot of good people. Special thanks to [Isaacs][5] for npm and a great example in [glob][6].
 
 #### Author: [Slashed](http://github.com/slashed)
-#### Contributors: [Charlie Robbins](http://nodejitsu.com), [Pedro Teixeira](https://github.com/pgte), [James Halliday](https://github.com/substack), [Zak Taylor](https://github.com/dobl), [Daniel Bartlett](https://github.com/danbuk)
+#### Contributors: [Charlie Robbins](http://nodejitsu.com), [Pedro Teixeira](https://github.com/pgte), [James Halliday](https://github.com/substack), [Zak Taylor](https://github.com/dobl), [Daniel Bartlett](https://github.com/danbuk), [Charlie McConnell](https://github.com/AvianFlu)
 
 [0]: http://slashed.posterous.com/writing-daemons-in-javascript-with-nodejs-0
 [1]: https://github.com/pgte/fugue/blob/master/deps/daemon.cc
