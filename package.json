@@ -16,13 +16,13 @@
     "type" : "git",
     "url" : "http://github.com/indexzero/daemon.node.git" 
   },
+  "dependencies": {
+    "bindings": "*"
+  },
   "devDependencies": {
     "vows": "0.6.x"
   },
   "main": "./lib/daemon",
-  "scripts" : {
-    "preinstall" : "bash ./install"
-  },
   "engines" : {
      "node" : ">= 0.4.0"
   }
