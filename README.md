@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/indexzero/daemon.node.png)](http://travis-ci.org/indexzero/daemon.node)
 # daemon.node
 
 A C++ add-on for Node.js to enable simple daemons in Javascript plus some useful wrappers in Javascript.
