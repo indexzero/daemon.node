@@ -14,16 +14,17 @@
   ],
   "repository" : {
     "type" : "git",
-    "url" : "http://github.com/indexzero/daemon.node.git" 
+    "url" : "http://github.com/indexzero/daemon.node.git"
+  },
+  "scripts": {
+    "test": "mocha --ui qunit test/*.js"
   },
   "devDependencies": {
-    "vows": "0.6.x"
+    "mocha": "1.8.1",
+    "after": "0.6.0"
   },
-  "main": "./lib/daemon",
-  "scripts" : {
-    "preinstall" : "bash ./install"
-  },
+  "main": "./index.js",
   "engines" : {
-     "node" : ">= 0.4.0"
+     "node" : ">= 0.8.0"
   }
 }
