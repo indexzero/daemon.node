@@ -1,6 +1,7 @@
 # daemon
 
 [![Build Status](https://secure.travis-ci.org/indexzero/daemon.node.png)](http://travis-ci.org/indexzero/daemon.node)
+[![Inline docs](http://inch-ci.org/github/indexzero/daemon.node.svg?branch=master)](http://inch-ci.org/github/indexzero/daemon.node)
 
 Turn a node script into a daemon.
 
