@@ -2,6 +2,9 @@ var cluster = require('cluster');
 var numCPUs = require('os').cpus().length;
 
 if (cluster.isMaster) {
+    // Daemonize before forking if you want the "uid" option to be useful.
+    require('../')();
+
     // Fork workers.
     for (var i = 0; i < numCPUs; ++i) {
         cluster.fork();
@@ -12,8 +15,7 @@ if (cluster.isMaster) {
         cluster.fork();
     });
 
-    // daemonize after setting up cluster
-    return require('../')();
+    return;
 }
 
 var http = require('http');

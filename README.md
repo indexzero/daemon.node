@@ -43,6 +43,8 @@ opt can optionally contain the following arguments:
 * stderr (file descriptor for stderr of the daemon)
 * env (environment for the daemon) (default: process.env)
 * cwd (current working directory for daemonized script) (default: process.cwd)
+* uid (child process user ID, either numeric or a name that can be looked up in /etc/passwd)
+* pidfile (the fully qualified name of a file to write the daemon's PID to)
 
 ## implementation notes
 
