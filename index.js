@@ -37,7 +37,7 @@ module.exports.daemon = function(script, args, opt) {
     var stderr = opt.stderr || 'ignore';
 
     var env = opt.env || process.env;
-    var cwd = opt.cwd || process.cwd;
+    var cwd = opt.cwd || process.cwd();
 
     var cp_opt = {
         stdio: ['ignore', stdout, stderr],
