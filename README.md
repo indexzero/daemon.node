@@ -44,6 +44,17 @@ opt can optionally contain the following arguments:
 * env (environment for the daemon) (default: process.env)
 * cwd (current working directory for daemonized script) (default: process.cwd)
 
+Example for passing file descriptors for stdout and stderr:
+```javascript
+var fs = require('fs'),
+var stdoutFd = fs.openSync('output.log', 'a');
+var stderrFd = fs.openSync('errors.log', 'a');
+require('daemon')({
+    stdout: stdoutFd,
+    stderr: stderrFd
+});
+```
+
 ## implementation notes
 
 Daemon actually re-spawns the current application and runs it again. The only difference between the original and the fork is that the original will not execute past the `daemon()` call whereas the fork will.
